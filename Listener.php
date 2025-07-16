@@ -18,8 +18,13 @@ class Listener
      * @param \XF\Mvc\ParameterBag $params
      * @throws \XF\Mvc\Reply\Exception
      */
-    public static function preDispatchAdminLogin(\XF\Mvc\Controller $controller, $action, \XF\Mvc\ParameterBag $params)
+    public static function preDispatchAdmin(\XF\Mvc\Controller $controller, $action, \XF\Mvc\ParameterBag $params)
     {
+        if (!$controller->app() instanceof \XF\Admin\App)
+        {
+            return;
+        }
+
         /** @var \XF\Entity\User|null $user */
         $user = \XF::em()->find(
             'XF:User',
