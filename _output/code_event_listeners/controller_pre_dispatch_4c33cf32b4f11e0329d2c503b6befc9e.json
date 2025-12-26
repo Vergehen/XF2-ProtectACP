@@ -6,4 +6,13 @@
     "active": true,
     "hint": "",
     "description": ""
-}
+},
+{
+    "event_id": "app_pub_start_begin",
+    "execute_order": 10,
+    "callback_class": "West\\ProtectACP\\Listener",
+    "callback_method": "onAdminStart",
+    "active": true,
+    "hint": "",
+    "description": ""
+},
