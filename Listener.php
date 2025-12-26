@@ -1,34 +1,41 @@
 <?php
 
-/**
- * Forked and improved
- * Original by West from TechGate Studio
- * Date of original creation: 12.06.2019
- * Purpose: Redirect non-admin users from any admin.php URL to public index
- */
+declare(strict_types=1);
 
 namespace West\ProtectACP;
 
-
+/** Protect admin area: redirect non-admins to public index. */
 class Listener
 {
     /**
-     * Handle admin request start: redirect non-admin users to public index.
+     * Redirect non-admins accessing admin.php to public index.
      *
      * @param \XF\App $app
      */
     public static function onAdminStart(\XF\App $app)
     {
-        // Get request path (ignore query string)
+        // Request URI
         $requestUri = $app->request()->getRequestUri();
-        $path = parse_url($requestUri, PHP_URL_PATH) ?: '';
 
-        // Only proceed for root-level admin.php requests
-        if (!strlen($path) || !preg_match('#^/+admin\.php(?:$|/)#i', $path)) {
+        // Extract path; parse_url may be null for protocol-relative URIs
+        $path = parse_url($requestUri, PHP_URL_PATH);
+        $isAdminRequest = false;
+
+        if (is_string($path) && strlen($path)) {
+            // e.g. "/admin.php"
+            $isAdminRequest = preg_match('#^/+admin\.php(?:$|/)#i', $path) === 1;
+        } else {
+            // Fallback: strip query/fragment and check raw URI
+            $cleanUri = preg_replace('/[?#].*$/', '', $requestUri);
+            $isAdminRequest = preg_match('#(?:^|/+)admin\.php(?:$|/)#i', $cleanUri) === 1;
+        }
+
+        // Only proceed if request targets admin.php
+        if (!$isAdminRequest) {
             return;
         }
 
-        // Obtain the session (may throw)
+        // Get session (may throw)
         try {
             $session = $app->session();
         } catch (\Exception $e) {
@@ -40,16 +47,16 @@ class Listener
             exit;
         }
 
-        // Load user from session (if any)
+        // Load user from session
         $userId = intval($session->userId ?: 0);
         $user = $userId ? $app->em()->find('XF:User', $userId) : null;
 
-        // Redirect non-admin users
+        // Redirect if not admin
         if (!$user || !$user->is_admin) {
             $url = $app->router('public')->buildLink('index');
             $response = $app->response();
             $response->redirect($url);
-            // Persist session cookies and other response changes
+            // Finalize response
             $app->complete($response);
             $response->send($app->request());
             exit;
