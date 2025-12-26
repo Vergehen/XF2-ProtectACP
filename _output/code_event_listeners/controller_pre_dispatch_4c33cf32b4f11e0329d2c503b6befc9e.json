@@ -1,8 +1,8 @@
 {
-    "event_id": "controller_pre_dispatch",
+    "event_id": "app_admin_start_begin",
     "execute_order": 10,
     "callback_class": "West\\ProtectACP\\Listener",
-    "callback_method": "preDispatchAdmin",
+    "callback_method": "onAdminStart",
     "active": true,
     "hint": "",
     "description": ""
